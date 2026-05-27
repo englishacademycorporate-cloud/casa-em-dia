@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Casa em Dia">
+<title>Casa em Dia</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; padding-bottom: 40px; }
+  .header { background: #7c3aed; color: white; padding: 20px 16px 0; position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 22px; font-weight: 700; }
+  .header p { font-size: 13px; opacity: 0.8; margin-top: 2px; margin-bottom: 12px; }
+  .tabs { display: flex; background: #6d28d9; }
+  .tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 11px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+  .tab.active { color: white; border-bottom-color: white; font-weight: 700; }
+  .content { padding: 16px; max-width: 480px; margin: 0 auto; }
+  .card { background: white; border-radius: 16px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 2px solid transparent; transition: border 0.2s; }
+  .card.completo { border-color: #22c55e; }
+  .card-header { padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+  .card-emoji { font-size: 24px; }
+  .card-info { flex: 1; }
+  .card-title { font-weight: 700; font-size: 15px; color: #1a1a1a; }
+  .card-sub { font-size: 12px; color: #888; margin-top: 2px; }
+  .card-status { text-align: right; }
+  .card-count { font-size: 13px; font-weight: 700; color: #555; }
+  .card-count.done { color: #22c55e; }
+  .card-arrow { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .progress { height: 4px; background: #f0f0f0; }
+  .progress-fill { height: 4px; background: #7c3aed; transition: width 0.3s; }
+  .progress-fill.done { background: #22c55e; }
+  .tarefas { padding: 8px 16px 12px; }
+  .tarefa { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .tarefa:last-of-type { border-bottom: none; }
+  .check-box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #ddd; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+  .check-box.checked { background: #22c55e; border-color: #22c55e; }
+  .check-icon { color: white; font-size: 14px; font-weight: 700; }
+  .tarefa-texto { flex: 1; font-size: 14px; color: #333; line-height: 1.4; cursor: pointer; }
+  .tarefa-texto.riscado { color: #aaa; text-decoration: line-through; }
+  .btn-acao { font-size: 16px; cursor: pointer; padding: 4px; background: none; border: none; color: #ccc; }
+  .btn-acao:hover { color: #888; }
+  .btn-excluir-tarefa { color: #fca5a5; }
+  .btn-excluir-tarefa:hover { color: #ef4444; }
+  .add-area { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+  .add-input { flex: 1; padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 10px; font-size: 14px; outline: none; }
+  .add-input:focus { border-color: #7c3aed; }
+  .add-btn { background: #7c3aed; color: white; border: none; border-radius: 10px; padding: 8px 14px; font-size: 18px; cursor: pointer; }
+  .acoes { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .btn-reset { background: none; border: 1px solid #e5e5e5; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #aaa; cursor: pointer; }
+  .btn-reset:hover { border-color: #7c3aed; color: #7c3aed; }
+  .faxina-config { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .faxina-config h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .faxina-config label { font-size: 13px; color: #555; display: block; margin-bottom: 6px; }
+  .data-input { width: 100%; padding: 10px 12px; border: 1px solid #e5e5e5; border-radius: 10px; font-size: 14px; outline: none; }
+  .data-input:focus { border-color: #7c3aed; }
+  .notif-banner { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px; color: #92400e; }
+  .config-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .config-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #1a1a1a; }
+  .config-card p { font-size: 13px; color: #666; line-height: 1.6; }
+  .btn-perigo { background: #ef4444; color: white; border: none; border-radius: 10px; padding: 10px 20px; font-size: 14px; cursor: pointer; margin-top: 12px; width: 100%; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 24px 24px 0 0; padding: 24px 16px 32px; width: 100%; max-width: 480px; }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
+  .modal-opcao { padding: 14px 16px; border: 1px solid #e5e5e5; border-radius: 12px; margin-bottom: 8px; cursor: pointer; font-size: 14px; color: #333; }
+  .modal-opcao:hover { background: #f5f0ff; border-color: #7c3aed; color: #7c3aed; }
+  .modal-cancelar { width: 100%; padding: 14px; border: none; background: #f5f5f5; border-radius: 12px; font-size: 14px; cursor: pointer; color: #666; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏠 Casa em Dia</h1>
+  <p id="data-hoje"></p>
+  <div class="tabs">
+    <div class="tab active" onclick="mudarAba('habitos')">🌅 Hábitos</div>
+    <div class="tab" onclick="mudarAba('limpeza')">🧹 Limpeza</div>
+    <div class="tab" onclick="mudarAba('faxina')">🧽 Faxina</div>
+    <div class="tab" onclick="mudarAba('config')">⚙️ Config</div>
+  </div>
+</div>
+
+<div class="content" id="conteudo"></div>
+
+<div class="modal-overlay" id="modal-mover">
+  <div class="modal">
+    <h3>📦 Mover tarefa para qual dia?</h3>
+    <div id="modal-opcoes"></div>
+    <button class="modal-cancelar" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+const DADOS_PADRAO = {
+  habitos: [
+    { id: "h1", texto: "Fazer a cama", feito: false },
+    { id: "h2", texto: "Âncora da manhã", feito: false },
+    { id: "h3", texto: "Alongamento", feito: false },
+    { id: "h4", texto: "Registrar 3 vitórias do dia", feito: false },
+    { id: "h5", texto: "Cozinha limpa antes de dormir", feito: false }
+  ],
+  limpeza: {
+    segunda: { emoji: "🛏️", nome: "Segunda-feira", zona: "Suite + Banheiro da Suite", tempo: "30 min", aberto: false, tarefas: [
+      { id: "s1", texto: "Fazer a cama", feito: false },
+      { id: "s2", texto: "Passar pano no piso de madeira", feito: false },
+      { id: "s3", texto: "Tirar pó do criado-mudo e ar condicionado", feito: false },
+      { id: "s4", texto: "Limpar pia e granito do banheiro", feito: false },
+      { id: "s5", texto: "Limpar espelho", feito: false },
+      { id: "s6", texto: "Limpar vaso sanitário", feito: false },
+      { id: "s7", texto: "Limpar box por fora", feito: false },
+      { id: "s8", texto: "Trocar tapetes do banheiro se necessário", feito: false }
+    ]},
+    terca: { emoji: "🍳", nome: "Terça-feira", zona: "Sala + Cozinha", tempo: "30 min", aberto: false, tarefas: [
+      { id: "t1", texto: "Passar pano no porcelanato da sala e cozinha", feito: false },
+      { id: "t2", texto: "Limpar bancada de madeira da ilha", feito: false },
+      { id: "t3", texto: "Limpar cooktop de vidro", feito: false },
+      { id: "t4", texto: "Limpar frente dos armários", feito: false },
+      { id: "t5", texto: "Limpar geladeira por fora", feito: false },
+      { id: "t6", texto: "Limpar bancada de granito", feito: false },
+      { id: "t7", texto: "Organizar o que ficou fora do lugar na sala", feito: false }
+    ]},
+    quarta: { emoji: "🧺", nome: "Quarta-feira", zona: "Lavanderia + Varanda Técnica", tempo: "30 min", aberto: false, tarefas: [
+      { id: "q1", texto: "Colocar ou tirar roupa da máquina", feito: false },
+      { id: "q2", texto: "Estender roupa no varal", feito: false },
+      { id: "q3", texto: "Limpar lava louças por fora", feito: false },
+      { id: "q4", texto: "Passar pano no chão da lavanderia", feito: false },
+      { id: "q5", texto: "Varrer e lavar piso da varanda técnica", feito: false },
+      { id: "q6", texto: "Limpar lixeira da varanda", feito: false }
+    ]},
+    quinta: { emoji: "💻", nome: "Quinta-feira", zona: "Escritório do Igor", tempo: "30 min", aberto: false, tarefas: [
+      { id: "qu1", texto: "Tirar pó da mesa e monitores", feito: false },
+      { id: "qu2", texto: "Tirar pó dos equipamentos", feito: false },
+      { id: "qu3", texto: "Limpar vidros por dentro", feito: false },
+      { id: "qu4", texto: "Passar pano no chão", feito: false },
+      { id: "qu5", texto: "Organizar tapete", feito: false },
+      { id: "qu6", texto: "Limpar bancada do lado", feito: false }
+    ]},
+    sexta: { emoji: "🎸", nome: "Sexta-feira", zona: "Banheiro Extra + Quarto Escritório", tempo: "30 min", aberto: false, tarefas: [
+      { id: "sx1", texto: "Limpar pia e espelho do banheiro extra", feito: false },
+      { id: "sx2", texto: "Limpar vaso sanitário", feito: false },
+      { id: "sx3", texto: "Limpar box por fora", feito: false },
+      { id: "sx4", texto: "Trocar tapetes se necessário", feito: false },
+      { id: "sx5", texto: "Passar pano no piso de madeira do quarto escritório", feito: false },
+      { id: "sx6", texto: "Organizar caixas e equipamentos", feito: false },
+      { id: "sx7", texto: "Tirar pó dos instrumentos e equipamentos", feito: false }
+    ]}
+  },
+  faxina: [
+    { id: "f1", texto: "Lavar box da suite por dentro", feito: false },
+    { id: "f2", texto: "Lavar box do banheiro extra por dentro", feito: false },
+    { id: "f3", texto: "Lavar azulejos dos dois banheiros", feito: false },
+    { id: "f4", texto: "Lavar piso dos dois banheiros", feito: false },
+    { id: "f5", texto: "Limpar rejuntes", feito: false },
+    { id: "f6", texto: "Lavar tapetes dos banheiros", feito: false },
+    { id: "f7", texto: "Limpar geladeira por dentro", feito: false },
+    { id: "f8", texto: "Limpar air fryer por dentro", feito: false },
+    { id: "f9", texto: "Limpar microondas por dentro", feito: false },
+    { id: "f10", texto: "Limpar azulejos atrás do fogão", feito: false },
+    { id: "f11", texto: "Limpar parte de baixo dos armários", feito: false },
+    { id: "f12", texto: "Janelas por dentro e por fora", feito: false },
+    { id: "f13", texto: "Vidros da varanda do Igor por fora", feito: false },
+    { id: "f14", texto: "Portas e maçanetas", feito: false },
+    { id: "f15", texto: "Rodapés", feito: false },
+    { id: "f16", texto: "Luminárias e interruptores", feito: false },
+    { id: "f17", texto: "Atrás e embaixo dos móveis", feito: false },
+    { id: "f18", texto: "Lavar piso da varanda técnica com água", feito: false },
+    { id: "f19", texto: "Limpar grade e tela da varanda", feito: false },
+    { id: "f20", texto: "Limpar equipamentos da academia", feito: false },
+    { id: "f21", texto: "Passar pano no piso emborrachado da academia", feito: false }
+  ],
+  faxinaData: "",
+  ultimoResetHabitos: ""
+};
+
+let estado = {};
+let abaAtiva = "habitos";
+let tarefaParaMover = null;
+const ORDEM_DIAS = ["segunda","terca","quarta","quinta","sexta"];
+
+function salvar() { localStorage.setItem("casaEmDia", JSON.stringify(estado)); }
+
+function carregar() {
+  const salvo = localStorage.getItem("casaEmDia");
+  estado = salvo ? JSON.parse(salvo) : JSON.parse(JSON.stringify(DADOS_PADRAO));
+  if (!estado.faxinaData) estado.faxinaData = "";
+  if (!estado.ultimoResetHabitos) estado.ultimoResetHabitos = "";
+}
+
+function verificarResetHabitos() {
+  const hoje = new Date().toDateString();
+  if (estado.ultimoResetHabitos !== hoje) {
+    estado.habitos.forEach(h => h.feito = false);
+    estado.ultimoResetHabitos = hoje;
+    salvar();
+  }
+}
+
+function dataFormatada() {
+  const dias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+  const meses = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const d = new Date();
+  return `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
+function gerarId() { return "id" + Date.now() + Math.random().toString(36).substr(2,5); }
+
+function mudarAba(aba) {
+  abaAtiva = aba;
+  document.querySelectorAll(".tab").forEach((t,i) => {
+    t.classList.toggle("active", ["habitos","limpeza","faxina","config"][i] === aba);
+  });
+  renderizar();
+}
+
+function renderizar() {
+  const c = document.getElementById("conteudo");
+  if (abaAtiva === "habitos") c.innerHTML = renderHabitos();
+  else if (abaAtiva === "limpeza") c.innerHTML = renderLimpeza();
+  else if (abaAtiva === "faxina") c.innerHTML = renderFaxina();
+  else c.innerHTML = renderConfig();
+}
+
+function renderHabitos() {
+  const lista = estado.habitos;
+  const feitos = lista.filter(h => h.feito).length;
+  const pct = lista.length ? Math.round((feitos/lista.length)*100) : 0;
+  const completo = feitos === lista.length && lista.length > 0;
+  let html = `<div class="card ${completo?'completo':''}">
+    <div class="card-header" style="cursor:default">
+      <span class="card-emoji">🌅</span>
+      <div class="card-info">
+        <div class="card-title">Hábitos Diários</div>
+        <div class="card-sub">Reset automático à meia-noite</div>
+      </div>
+      <div class="card-status">
+        <div class="card-count ${completo?'done':''}">${completo?'✅ Feito!':feitos+'/'+lista.length}</div>
+      </div>
+    </div>
+    <div class="progress"><div class="progress-fill ${completo?'done':''}" style="width:${pct}%"></div></div>
+    <div class="tarefas">`;
+  lista.forEach(h => {
+    html += `<div class="tarefa">
+      <div class="check-box ${h.feito?'checked':''}" onclick="toggleHabito('${h.id}')">
+        ${h.feito?'<span class="check-icon">✓</span>':''}
+      </div>
+      <span class="tarefa-texto ${h.feito?'riscado':''}" onclick="toggleHabito('${h.id}')">${h.texto}</span>
+      <button class="btn-acao btn-excluir-tarefa" onclick="excluirHabito('${h.id}')">✕</button>
+    </div>`;
+  });
+  html += `<div class="add-area">
+      <input class="add-input" id="input-habito" type="text" placeholder="Adicionar hábito..." onkeydown="if(event.key==='Enter')adicionarHabito()">
+      <button class="add-btn" onclick="adicionarHabito()">+</button>
+    </div></div></div>`;
+  return html;
+}
+
+function toggleHabito(id) {
+  const h = estado.habitos.find(x => x.id===id);
+  if(h){h.feito=!h.feito;salvar();renderizar();}
+}
+function adicionarHabito() {
+  const input = document.getElementById("input-habito");
+  const texto = input.value.trim();
+  if(!texto)return;
+  estado.habitos.push({id:gerarId(),texto,feito:false});
+  salvar();renderizar();
+}
+function excluirHabito(id) {
+  if(!confirm("Excluir este hábito?"))return;
+  estado.habitos = estado.habitos.filter(h=>h.id!==id);
+  salvar();renderizar();
+}
+
+function renderLimpeza() {
+  let html = "";
+  ORDEM_DIAS.forEach(diaKey => {
+    const dia = estado.limpeza[diaKey];
+    const feitos = dia.tarefas.filter(t=>t.feito).length;
+    const total = dia.tarefas.length;
+    const pct = total ? Math.round((feitos/total)*100) : 0;
+    const completo = feitos===total && total>0;
+    const aberto = dia.aberto||false;
+    html += `<div class="card ${completo?'completo':''}">
+      <div class="card-header" onclick="toggleDia('${diaKey}')">
+        <span class="card-emoji">${dia.emoji}</span>
+        <div class="card-info">
+          <div class="card-title">${dia.nome}</div>
+          <div class="card-sub">${dia.zona} · ${dia.tempo}</div>
+        </div>
+        <div class="card-status">
+          <div class="card-count ${completo?'done':''}">${completo?'✅':feitos+'/'+total}</div>
+          <div class="card-arrow">${aberto?'▲':'▼'}</div>
+        </div>
+      </div>
+      <div class="progress"><div class="progress-fill ${completo?'done':''}" style="width:${pct}%"></div></div>`;
+    if(aberto){
+      html += `<div class="tarefas">`;
+      dia.tarefas.forEach(t => {
+        html += `<div class="tarefa">
+          <div class="check-box ${t.feito?'checked':''}" onclick="toggleTarefa('${diaKey}','${t.id}')">
+            ${t.feito?'<span class="check-icon">✓</span>':''}
+          </div>
+          <span class="tarefa-texto ${t.feito?'riscado':''}" onclick="toggleTarefa('${diaKey}','${t.id}')">${t.texto}</span>
+          <button class="btn-acao" onclick="abrirModalMover('${diaKey}','${t.id}')" title="Mover para outro dia">↕</button>
+          <button class="btn-acao btn-excluir-tarefa" onclick="excluirTarefa('${diaKey}','${t.id}')">✕</button>
+        </div>`;
+      });
+      html += `<div class="add-area">
+          <input class="add-input" id="input-${diaKey}" type="text" placeholder="Adicionar tarefa..." onkeydown="if(event.key==='Enter')adicionarTarefa('${diaKey}')">
+          <button class="add-btn" onclick="adicionarTarefa('${diaKey}')">+</button>
+        </div>
+        <div class="acoes">
+          <button class="btn-reset" onclick="resetDia('${diaKey}')">🔄 Resetar dia</button>
+        </div></div>`;
+    }
+    html += `</div>`;
+  });
+  return html;
+}
+
+function toggleDia(diaKey){estado.limpeza[diaKey].aberto=!estado.limpeza[diaKey].aberto;salvar();renderizar();}
+function toggleTarefa(diaKey,id){const t=estado.limpeza[diaKey].tarefas.find(x=>x.id===id);if(t){t.feito=!t.feito;salvar();renderizar();}}
+function adicionarTarefa(diaKey){const input=document.getElementById("input-"+diaKey);const texto=input.value.trim();if(!texto)return;estado.limpeza[diaKey].tarefas.push({id:gerarId(),texto,feito:false});salvar();renderizar();}
+function excluirTarefa(diaKey,id){if(!confirm("Excluir esta tarefa?"))return;estado.limpeza[diaKey].tarefas=estado.limpeza[diaKey].tarefas.filter(t=>t.id!==id);salvar();renderizar();}
+function resetDia(diaKey){if(!confirm("Resetar todas as tarefas deste dia?"))return;estado.limpeza[diaKey].tarefas.forEach(t=>t.feito=false);salvar();renderizar();}
+
+function abrirModalMover(diaKey,tarefaId){
+  tarefaParaMover={diaKey,tarefaId};
+  const opcoes=document.getElementById("modal-opcoes");
+  opcoes.innerHTML="";
+  ORDEM_DIAS.filter(d=>d!==diaKey).forEach(d=>{
+    const div=document.createElement("div");
+    div.className="modal-opcao";
+    div.textContent=`${estado.limpeza[d].emoji} ${estado.limpeza[d].nome}`;
+    div.onclick=()=>moverTarefa(d);
+    opcoes.appendChild(div);
+  });
+  document.getElementById("modal-mover").classList.add("open");
+}
+function moverTarefa(destino){
+  if(!tarefaParaMover)return;
+  const{diaKey,tarefaId}=tarefaParaMover;
+  const idx=estado.limpeza[diaKey].tarefas.findIndex(t=>t.id===tarefaId);
+  if(idx===-1){fecharModal();return;}
+  const[tarefa]=estado.limpeza[diaKey].tarefas.splice(idx,1);
+  tarefa.feito=false;
+  estado.limpeza[destino].tarefas.push(tarefa);
+  salvar();fecharModal();renderizar();
+}
+function fecharModal(){document.getElementById("modal-mover").classList.remove("open");tarefaParaMover=null;}
+
+function renderFaxina(){
+  const lista=estado.faxina;
+  const feitos=lista.filter(f=>f.feito).length;
+  const total=lista.length;
+  const pct=total?Math.round((feitos/total)*100):0;
+  const completo=feitos===total&&total>0;
+  let aviso="";
+  if(estado.faxinaData){
+    const dataFaxina=new Date(estado.faxinaData+"T12:00:00");
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const diff=Math.ceil((dataFaxina-hoje)/(1000*60*60*24));
+    if(diff===1)aviso=`<div class="notif-banner">⚠️ A faxina é <strong>amanhã!</strong> Prepare os produtos.</div>`;
+    else if(diff===0)aviso=`<div class="notif-banner">🧹 Hoje é dia de <strong>faxina!</strong> Vai lá! 💪</div>`;
+    else if(diff<0)aviso=`<div class="notif-banner">⚠️ A faxina estava marcada para ${dataFaxina.toLocaleDateString('pt-BR')}. Atualize a data!</div>`;
+  }
+  let dataLabel="";
+  if(estado.faxinaData){
+    const d=new Date(estado.faxinaData+"T12:00:00");
+    dataLabel=`<p style="font-size:13px;color:#7c3aed;margin-top:8px;">📌 ${d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</p>`;
+  }
+  let html=aviso+`<div class="faxina-config">
+    <h3>📅 Próxima Faxina</h3>
+    <label>Data agendada:</label>
+    <input class="data-input" type="date" id="data-faxina" value="${estado.faxinaData||''}" onchange="salvarDataFaxina()">
+    ${dataLabel}
+  </div>
+  <div class="card ${completo?'completo':''}">
+    <div class="card-header" style="cursor:default">
+      <span class="card-emoji">🧽</span>
+      <div class="card-info">
+        <div class="card-title">Checklist da Faxina</div>
+        <div class="card-sub">${total} tarefas · reset manual</div>
+      </div>
+      <div class="card-status">
+        <div class="card-count ${completo?'done':''}">${completo?'✅ Feito!':feitos+'/'+total}</div>
+      </div>
+    </div>
+    <div class="progress"><div class="progress-fill ${completo?'done':''}" style="width:${pct}%"></div></div>
+    <div class="tarefas">`;
+  lista.forEach(f=>{
+    html+=`<div class="tarefa">
+      <div class="check-box ${f.feito?'checked':''}" onclick="toggleFaxina('${f.id}')">
+        ${f.feito?'<span class="check-icon">✓</span>':''}
+      </div>
+      <span class="tarefa-texto ${f.feito?'riscado':''}" onclick="toggleFaxina('${f.id}')">${f.texto}</span>
+      <button class="btn-acao btn-excluir-tarefa" onclick="excluirFaxina('${f.id}')">✕</button>
+    </div>`;
+  });
+  html+=`<div class="add-area">
+      <input class="add-input" id="input-faxina" type="text" placeholder="Adicionar tarefa..." onkeydown="if(event.key==='Enter')adicionarFaxina()">
+      <button class="add-btn" onclick="adicionarFaxina()">+</button>
+    </div>
+    <div class="acoes">
+      <button class="btn-reset" onclick="resetFaxina()">🔄 Resetar faxina</button>
+    </div></div></div>`;
+  return html;
+}
+
+function salvarDataFaxina(){estado.faxinaData=document.getElementById("data-faxina").value;salvar();renderizar();}
+function toggleFaxina(id){const f=estado.faxina.find(x=>x.id===id);if(f){f.feito=!f.feito;salvar();renderizar();}}
+function adicionarFaxina(){const input=document.getElementById("input-faxina");const texto=input.value.trim();if(!texto)return;estado.faxina.push({id:gerarId(),texto,feito:false});salvar();renderizar();}
+function excluirFaxina(id){if(!confirm("Excluir esta tarefa?"))return;estado.faxina=estado.faxina.filter(f=>f.id!==id);salvar();renderizar();}
+function resetFaxina(){if(!confirm("Resetar toda a faxina?"))return;estado.faxina.forEach(f=>f.feito=false);salvar();renderizar();}
+
+function renderConfig(){
+  return `<div class="config-card">
+    <h3>📱 Como instalar no celular</h3>
+    <p>1. Transfira o arquivo para o celular via WhatsApp, Google Drive ou cabo USB<br><br>
+    2. Abra o arquivo no <strong>Google Chrome</strong><br><br>
+    3. Toque nos <strong>três pontinhos</strong> no canto superior direito<br><br>
+    4. Toque em <strong>"Adicionar à tela inicial"</strong><br><br>
+    Pronto! O app aparece na tela inicial como qualquer outro app.</p>
+  </div>
+  <div class="config-card">
+    <h3>⚠️ Resetar tudo</h3>
+    <p>Apaga todos os dados e volta ao estado inicial. Não tem como desfazer!</p>
+    <button class="btn-perigo" onclick="resetarTudo()">Resetar tudo</button>
+  </div>
+  <div class="config-card">
+    <h3>ℹ️ Sobre</h3>
+    <p>Casa em Dia v1.0 · Feito com 💜</p>
+  </div>`;
+}
+
+function resetarTudo(){
+  if(!confirm("Tem certeza? Todos os dados serão apagados!"))return;
+  localStorage.removeItem("casaEmDia");
+  estado=JSON.parse(JSON.stringify(DADOS_PADRAO));
+  salvar();renderizar();
+}
+
+carregar();
+verificarResetHabitos();
+document.getElementById("data-hoje").textContent=dataFormatada();
+renderizar();
+setInterval(verificarResetHabitos,60000);
+</script>
+</body>
+</html>
